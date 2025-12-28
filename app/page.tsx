@@ -9,8 +9,8 @@ import {
   AnnouncementTag,
   AnnouncementTitle,
 } from "@/components/ui/shadcn-io/announcement";
-import { ServerIP } from "@/components/ui/server-ip";
-import { ServerStatus } from "@/components/ui/server-status";
+import { ServerIP } from "@/components/ui/core/server-ip";
+import { ServerStatus } from "@/components/ui/core/server-status";
 
 export default function HomePage() {
   return (

@@ -10,6 +10,11 @@
 !.yarn/releases
 !.yarn/versions
 
+# code editor settings
+.vscode/*
+!.vscode/settings.json
+.idea/*
+
 # testing
 /coverage
 
