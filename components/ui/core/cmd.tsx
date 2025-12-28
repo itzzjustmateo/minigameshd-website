@@ -13,24 +13,55 @@ import {
 } from "@/components/ui/command";
 import { toast } from "sonner";
 
+type CommandAction = () => void;
+
+interface CommandEntry {
+  label: string;
+  action: CommandAction;
+}
+
 export function CommandMenu() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (
-        (e.key === "k" && (e.ctrlKey || e.metaKey)) ||
-        (e.key === "j" && (e.ctrlKey || e.metaKey))
-      ) {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isCmd = e.ctrlKey || e.metaKey;
+      if (isCmd && (e.key === "k" || e.key === "j")) {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen((prev) => !prev);
       }
     };
 
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  const navigate =
+    (path: string): CommandAction =>
+    () => {
+      router.push(path);
+      setOpen(false);
+    };
+
+  const navigationCommands: CommandEntry[] = [
+    { label: "Home", action: navigate("/") },
+    { label: "Team", action: navigate("/team") },
+    { label: "Regeln", action: navigate("/rules") },
+    { label: "FAQ", action: navigate("/faq") },
+    { label: "Bewerben", action: navigate("/apply") },
+  ];
+
+  const actionCommands: CommandEntry[] = [
+    {
+      label: "Server-IP kopieren",
+      action: async () => {
+        await navigator.clipboard.writeText("minigameshd.minecraft.to");
+        toast.success("Server-IP kopiert");
+        setOpen(false);
+      },
+    },
+  ];
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -39,40 +70,21 @@ export function CommandMenu() {
         <CommandEmpty>Keine Ergebnisse.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
-          <CommandItem onSelect={() => router.push("/")}>Home</CommandItem>
-          <CommandItem onSelect={() => router.push("/apply")}>
-            Bewerben
-          </CommandItem>
-          <CommandItem onSelect={() => router.push("/rules")}>
-            Regeln
-          </CommandItem>
-          <CommandItem onSelect={() => router.push("/team")}>Team</CommandItem>
-          <CommandItem onSelect={() => router.push("/status")}>
-            Server Status
-          </CommandItem>
+          {navigationCommands.map((cmd) => (
+            <CommandItem key={cmd.label} onSelect={cmd.action}>
+              {cmd.label}
+            </CommandItem>
+          ))}
         </CommandGroup>
 
         <CommandSeparator />
 
         <CommandGroup heading="Aktionen">
-          <CommandItem
-            onSelect={() => {
-              navigator.clipboard.writeText("minigameshd.minecraft.to");
-              toast.success("Server-IP kopiert");
-              setOpen(false);
-            }}
-          >
-            Server-IP kopieren
-          </CommandItem>
-
-          <CommandItem
-            onSelect={() => {
-              window.open("/discord", "_blank");
-              setOpen(false);
-            }}
-          >
-            Discord öffnen
-          </CommandItem>
+          {actionCommands.map((cmd) => (
+            <CommandItem key={cmd.label} onSelect={cmd.action}>
+              {cmd.label}
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </CommandDialog>

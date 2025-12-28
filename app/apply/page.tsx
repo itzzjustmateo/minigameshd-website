@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function Page() {
   const [role, setRole] = useState<string>("");
@@ -157,6 +158,17 @@ export default function Page() {
 
             <Button type="submit" className="w-full mt-4">
               Bewerbung abschicken & Screenshot erstellen
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              type="button"
+              className="w-full mt-1"
+              variant={"link"}
+            >
+              <Link href="/discord" target="_blank" rel="noreferrer">
+                Zum Discord
+              </Link>
             </Button>
           </form>
         </CardContent>
