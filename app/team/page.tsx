@@ -15,6 +15,13 @@ const TEAM = [
     fallback: "B",
   },
   {
+    name: "Julien",
+    role: "Co-Owner",
+    avatar:
+      "https://cdn.discordapp.com/avatars/1270816176993468451/e4008860c7b6d111ebbfc53dadf46847.webp??size=128",
+    fallback: "J",
+  },
+  {
     name: "Crones Gott",
     role: "Co-Owner",
     avatar:
