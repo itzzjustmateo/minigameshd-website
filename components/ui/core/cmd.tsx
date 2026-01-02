@@ -27,14 +27,24 @@ export function CommandMenu() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const isCmd = e.ctrlKey || e.metaKey;
-      if (isCmd && (e.key === "k" || e.key === "j")) {
+      const key = e.key.toLowerCase();
+
+      // Ctrl/Cmd + K (official) and Ctrl/Cmd + J (secret)
+      if (isCmd && (key === "k" || key === "j")) {
         e.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen(true);
       }
     };
 
+    const onOpenCommand = () => setOpen(true);
+
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("open-command-menu", onOpenCommand);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("open-command-menu", onOpenCommand);
+    };
   }, []);
 
   const navigate =
@@ -44,13 +54,19 @@ export function CommandMenu() {
       setOpen(false);
     };
 
+  // All pages
   const navigationCommands: CommandEntry[] = [
     { label: "Home", action: navigate("/") },
     { label: "Team", action: navigate("/team") },
-    { label: "Regeln", action: navigate("/rules") },
-    { label: "Bewerben", action: navigate("/apply") },
     { label: "Status", action: navigate("/status") },
+    { label: "Regeln", action: navigate("/rules") },
     { label: "FAQ", action: navigate("/faq") },
+    { label: "Bewerben", action: navigate("/apply") },
+
+    // Legal / Info
+    { label: "Datenschutz", action: navigate("/privacy") },
+    { label: "Nutzungsbedingungen", action: navigate("/terms") },
+    { label: "Impressum", action: navigate("/impressum") },
   ];
 
   const actionCommands: CommandEntry[] = [
