@@ -6,7 +6,7 @@ export function Footer() {
           © 2024 - {new Date().getFullYear()} MiniGamesHD. Alle Rechte
           vorbehalten.
         </span>
-        <span>Minecraft Minigame Server</span>
+        <span>Website by DevFlare</span>
       </div>
     </footer>
   );
