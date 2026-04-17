@@ -59,22 +59,22 @@ export function CommandMenu() {
     { label: "Home", action: navigate("/") },
     { label: "Team", action: navigate("/team") },
     { label: "Status", action: navigate("/status") },
-    { label: "Regeln", action: navigate("/rules") },
+    { label: "Rules", action: navigate("/rules") },
     { label: "FAQ", action: navigate("/faq") },
-    { label: "Bewerben", action: navigate("/apply") },
+    { label: "Apply", action: navigate("/apply") },
 
     // Legal / Info
-    { label: "Datenschutz", action: navigate("/privacy") },
-    { label: "Nutzungsbedingungen", action: navigate("/terms") },
-    { label: "Impressum", action: navigate("/impressum") },
+    { label: "Privacy Policy", action: navigate("/privacy") },
+    { label: "Terms of Service", action: navigate("/terms") },
+    { label: "Imprint", action: navigate("/impressum") },
   ];
 
   const actionCommands: CommandEntry[] = [
     {
-      label: "Server-IP kopieren",
+      label: "Copy Server IP",
       action: async () => {
         await navigator.clipboard.writeText("minigameshd.minecraft.to");
-        toast.success("Server-IP kopiert");
+        toast.success("Server IP copied");
         setOpen(false);
       },
     },
@@ -82,9 +82,9 @@ export function CommandMenu() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Befehl oder Seite suchen…" />
+      <CommandInput placeholder="Search command or page..." />
       <CommandList>
-        <CommandEmpty>Keine Ergebnisse.</CommandEmpty>
+        <CommandEmpty>No results.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
           {navigationCommands.map((cmd) => (
@@ -96,7 +96,7 @@ export function CommandMenu() {
 
         <CommandSeparator />
 
-        <CommandGroup heading="Aktionen">
+        <CommandGroup heading="Actions">
           {actionCommands.map((cmd) => (
             <CommandItem key={cmd.label} onSelect={cmd.action}>
               {cmd.label}
