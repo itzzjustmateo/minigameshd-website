@@ -66,7 +66,7 @@ export default function TeamPage() {
         <header className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Team</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Wer steckt eigentlich hinter MiniGamesHD?
+            Meet the people behind MiniGamesHD
           </p>
         </header>
 

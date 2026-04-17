@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useMemo, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import html2canvas from "html2canvas";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -29,10 +29,6 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
-/* -------------------------------------------------------------------------- */
-/* Constants                                                                  */
-/* -------------------------------------------------------------------------- */
-
 const ROLES = [
   { value: "co-owner", label: "Co-Owner", minAge: 18 },
   { value: "admin", label: "Admin", minAge: 15 },
@@ -50,57 +46,33 @@ const EXPERIENCE_OPTIONS = [
   "Building",
 ] as const;
 
-/* -------------------------------------------------------------------------- */
-/* Zod Schema                                                                 */
-/* -------------------------------------------------------------------------- */
+const formSchema = z.object({
+  mcName: z.string().min(3, "Min 3 characters"),
+  discord: z.string().min(2, "Min 2 characters"),
+  age: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num >= 10;
+  }, { message: "Enter a valid age (10+)" }),
+  role: z.string(),
 
-const formSchema = z
-  .object({
-    mcName: z.string().min(2),
-    discord: z.string().min(2),
-    age: z.number().min(10),
-    role: z.enum(ROLES.map((r) => r.value) as [string, ...string[]]),
+  motivationWhy: z.string().min(10, "Min 10 characters"),
+  motivationContribution: z.string().min(10, "Min 10 characters"),
 
-    motivationWhy: z.string().min(10),
-    motivationContribution: z.string().min(10),
+  experienceTags: z.array(z.string()).optional(),
+  experienceText: z.string().optional(),
 
-    experienceTags: z.array(z.string()).optional(),
-    experienceText: z.string().optional(),
+  honesty: z.string().min(5, "Min 5 characters"),
+  time: z.string().min(1, "Please enter your available time"),
 
-    honesty: z.string().min(5),
-    time: z.string().min(1),
-
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-  })
-  .superRefine((data, ctx) => {
-    const role = ROLES.find((r) => r.value === data.role);
-
-    if (role && data.age < role.minAge) {
-      ctx.addIssue({
-        path: ["age"],
-        message: `Für ${role.label} musst du mindestens ${role.minAge} Jahre alt sein.`,
-        code: z.ZodIssueCode.custom,
-      });
-    }
-
-    if (data.role === "co-owner" && (!data.firstName || !data.lastName)) {
-      ctx.addIssue({
-        path: ["firstName"],
-        message: "Vor- und Nachname sind für Co-Owner erforderlich",
-        code: z.ZodIssueCode.custom,
-      });
-    }
-  });
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
-/* -------------------------------------------------------------------------- */
-/* Page                                                                       */
-/* -------------------------------------------------------------------------- */
-
 export default function ApplyPage() {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -116,41 +88,88 @@ export default function ApplyPage() {
   });
 
   const experienceTags = watch("experienceTags");
-
-  /* ---------------- Progress ---------------- */
-
-  const progress = useMemo(() => {
-    const required = [
-      "mcName",
-      "discord",
-      "age",
-      "role",
-      "motivationWhy",
-      "motivationContribution",
-      "honesty",
-      "time",
-    ] as const;
-
-    const values = watch();
-    const filled = required.filter((k) => !!values[k]).length;
-
-    return Math.round((filled / required.length) * 100);
-  }, [watch]);
-
-  /* ---------------- Scroll to first error ---------------- */
+  const selectedRole = watch("role");
 
   useEffect(() => {
-    const firstError = Object.keys(errors)[0];
-    if (firstError) {
-      document
-        .querySelector(`[name="${firstError}"]`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      if (errorKeys.length >= 4) {
+        toast.error("Please fill in all required fields");
+      } else {
+        const firstError = errors[errorKeys[0] as keyof typeof errors];
+        toast.error(firstError?.message || "Invalid input");
+      }
     }
   }, [errors]);
 
-  /* ---------------- Submit (html2canvas fix) ---------------- */
+  const onSubmit = useCallback(async (data: FormValues) => {
+    if (!data.role) {
+      toast.error("Please select a role");
+      return;
+    }
 
-  const onSubmit = useCallback(async () => {
+    setIsSubmitting(true);
+
+    const minAge = ROLES.find(r => r.value === data.role)?.minAge || 10;
+    const age = Number(data.age);
+    if (isNaN(age) || age < minAge) {
+      toast.error(`Must be at least ${minAge} years old for this role`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const embed = {
+      title: "New Application",
+      color: 5763714,
+      fields: [
+        { name: "Minecraft", value: data.mcName, inline: true },
+        { name: "Discord", value: data.discord, inline: true },
+        { name: "Age", value: data.age, inline: true },
+        { name: "Role", value: data.role, inline: true },
+        {
+          name: "Why this server?",
+          value: data.motivationWhy || "N/A",
+        },
+        {
+          name: "What can you contribute?",
+          value: data.motivationContribution || "N/A",
+        },
+        {
+          name: "Experience",
+          value:
+            data.experienceTags?.length || data.experienceText
+              ? `${
+                  data.experienceTags?.join(", ") || ""
+                }${data.experienceText ? `\n${data.experienceText}` : ""}`
+              : "None",
+        },
+        {
+          name: "What do you find difficult?",
+          value: data.honesty || "N/A",
+        },
+        {
+          name: "Time per week",
+          value: data.time || "N/A",
+        },
+      ],
+    };
+
+    try {
+      const res = await fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] }),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      toast.success("Application submitted!");
+    } catch {
+      toast.error("Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+
     if (!cardRef.current) return;
 
     cardRef.current.classList.add("screenshot-safe");
@@ -166,119 +185,120 @@ export default function ApplyPage() {
       const link = document.createElement("a");
 
       link.href = image;
-      link.download = "minigameshd-bewerbung.png";
+      link.download = "minigameshd-application.png";
       link.click();
 
-      toast.success("Screenshot erstellt!");
+      toast.success("Screenshot saved!");
     } catch {
-      toast.error("Screenshot fehlgeschlagen");
+      toast.error("Screenshot failed");
     } finally {
       cardRef.current.classList.remove("screenshot-safe");
     }
   }, []);
 
-  /* ---------------------------------------------------------------------- */
-
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <Card ref={cardRef} className="w-full max-w-xl shadow-2xl">
-        <CardHeader>
-          <CardTitle>MinigamesHD Bewerbung</CardTitle>
-          <CardDescription>{progress}% abgeschlossen</CardDescription>
-          <div className="h-2 bg-muted rounded">
-            <div
-              className="h-2 bg-primary rounded transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+    <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+      <Card ref={cardRef} className="w-full max-w-lg shadow-lg">
+        <CardHeader className="space-y-4">
+          <CardTitle>Application</CardTitle>
+          <CardDescription className="text-center">
+            Apply now to join the MiniGamesHD Team!
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Field
-              label="Minecraft Name"
-              required
-              error={errors.mcName?.message}
-            >
-              <Input {...register("mcName")} />
-            </Field>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <Field
+                label="Minecraft Name"
+                required
+                error={errors.mcName?.message}
+              >
+                <Input
+                  {...register("mcName")}
+                  placeholder="Your In-Game name"
+                />
+              </Field>
+              <Field label="Discord" required error={errors.discord?.message}>
+                <Input {...register("discord")} placeholder="Username" />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Age" required error={errors.age?.message}>
+                <Input
+                  {...register("age")}
+                  placeholder="18"
+                />
+              </Field>
+              <Field label="Role" required error={errors.role?.message}>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            {r.label} (age {r.minAge}+)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Field>
+            </div>
 
             <Field
-              label="Discord Name"
-              required
-              error={errors.discord?.message}
-            >
-              <Input {...register("discord")} />
-            </Field>
-
-            <Field label="Alter" required error={errors.age?.message}>
-              <Input
-                type="number"
-                {...register("age", { valueAsNumber: true })}
-              />
-            </Field>
-
-            <Field
-              label="Bewerbungsrolle"
-              required
-              error={errors.role?.message}
-            >
-              <Controller
-                name="role"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          <span className="text-muted-foreground">
-                            Bitte auswählen
-                          </span>
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((r) => (
-                        <SelectItem key={r.value} value={r.value}>
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </Field>
-
-            <Field
-              label="Warum unser Server?"
+              label="Why our server?"
               required
               error={errors.motivationWhy?.message}
             >
-              <Textarea {...register("motivationWhy")} />
+              <Textarea
+                {...register("motivationWhy")}
+                placeholder="Why do you want to join our team?"
+                className="min-h-[80px]"
+              />
             </Field>
 
             <Field
-              label="Was kannst du konkret beitragen?"
+              label="What can you contribute?"
               required
               error={errors.motivationContribution?.message}
             >
-              <Textarea {...register("motivationContribution")} />
+              <Textarea
+                {...register("motivationContribution")}
+                placeholder="What skills do you bring?"
+                className="min-h-[80px]"
+              />
             </Field>
 
-            {/* EXPERIENCE */}
-            <Field label="Erfahrung">
+            <Field label="Experience (optional)">
               <Controller
                 name="experienceTags"
                 control={control}
                 render={({ field }) => (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-wrap gap-2">
                     {EXPERIENCE_OPTIONS.map((opt) => {
                       const checked = field.value?.includes(opt);
-
                       return (
                         <label
                           key={opt}
-                          className="flex items-center gap-2 text-sm cursor-pointer"
+                          className={`
+                            flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm cursor-pointer transition-colors
+                            ${
+                              checked
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background hover:bg-accent"
+                            }
+                          `}
                         >
                           <Checkbox
                             checked={checked}
@@ -291,8 +311,9 @@ export default function ApplyPage() {
                                 );
                               }
                             }}
+                            className="sr-only"
                           />
-                          <span>{opt}</span>
+                          {opt}
                         </label>
                       );
                     })}
@@ -303,43 +324,47 @@ export default function ApplyPage() {
               {experienceTags && experienceTags.length > 0 && (
                 <Textarea
                   {...register("experienceText")}
-                  placeholder="Optional: Details zu deiner Erfahrung"
-                  className="mt-2"
+                  placeholder={`Tell us about your ${experienceTags.join(", ")} experience`}
+                  className="mt-3"
                 />
               )}
             </Field>
 
-            <Field
-              label="Was fällt dir im Team schwer?"
-              required
-              error={errors.honesty?.message}
-            >
-              <Textarea {...register("honesty")} />
-            </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field
+                label="What do you find difficult?"
+                required
+                error={errors.honesty?.message}
+              >
+                <Textarea
+                  {...register("honesty")}
+                  placeholder="Be honest..."
+                  className="min-h-[60px]"
+                />
+              </Field>
+              <Field label="Time/week" required error={errors.time?.message}>
+                <Input {...register("time")} placeholder="e.g. 10 hours" />
+              </Field>
+            </div>
 
-            <Field label="Zeit pro Woche" required error={errors.time?.message}>
-              <Input {...register("time")} />
-            </Field>
-
-            <Button type="submit" className="w-full">
-              Screenshot erstellen
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Application"}
             </Button>
 
-            <Button asChild variant="link" className="w-full">
-              <Link href="/discord" target="_blank">
-                Zum Discord
+            <div className="text-center text-sm text-muted-foreground">
+              <Link
+                href="/discord"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Questions? Join our Discord
               </Link>
-            </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
     </main>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/* Helper                                                                      */
-/* -------------------------------------------------------------------------- */
 
 function Field({
   label,
@@ -353,13 +378,13 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <Label>
         {label}
-        {required && <span className="text-red-500"> *</span>}
+        {required && <span className="text-destructive"> *</span>}
       </Label>
       {children}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

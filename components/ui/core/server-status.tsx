@@ -58,12 +58,12 @@ export function ServerStatus() {
   }, []);
 
   if (isOnline === null) {
-    return <div className="text-sm">Serverstatus wird geladen…</div>;
+    return <div className="text-sm">Loading server status...</div>;
   }
 
   if (!isOnline) {
-    return <div className="text-sm">🔴 Server offline</div>;
+    return <div className="text-sm">Server offline</div>;
   }
 
-  return <div className="text-sm">🟢 {onlinePlayers} Spieler online</div>;
+  return <div className="text-sm">{onlinePlayers} players online</div>;
 }

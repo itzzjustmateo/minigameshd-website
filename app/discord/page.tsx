@@ -34,11 +34,11 @@ export default function DiscordPage() {
         {/* Spinner */}
         <Loader2 className="mx-auto h-10 w-10 animate-spin text-muted-foreground" />
 
-        <h1 className="text-3xl font-bold">Weiterleitung zu Discord</h1>
+        <h1 className="text-3xl font-bold">Redirecting to Discord</h1>
 
         <p className="text-muted-foreground">
-          Du wirst in <strong>{Math.max(seconds, 0)}</strong> Sekunden
-          weitergeleitet…
+          You will be redirected in <strong>{Math.max(seconds, 0)}</strong>{" "}
+          seconds…
         </p>
 
         <Button
@@ -48,7 +48,7 @@ export default function DiscordPage() {
           rel="noopener noreferrer"
         >
           <ExternalLink className="mr-2 h-4 w-4" />
-          Jetzt öffnen
+          Open now
         </Button>
 
         <p className="text-xs text-muted-foreground break-all">

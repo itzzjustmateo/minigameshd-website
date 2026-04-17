@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MiniGamesHD",
   description:
-    "Ein moderner Minecraft Minigame-Server mit Fokus auf Qualität, Fairness und Community.",
+    "A modern Minecraft minigame server focused on quality, fairness, and community.",
 };
 
 export default function RootLayout({
@@ -29,13 +29,13 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="de"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} dark`}
       suppressHydrationWarning
     >
-      <body>
+      <body className="min-h-screen flex flex-col">
         <Navbar />
-        {children}
+        <main className="flex-1">{children}</main>
         <Footer />
         <CommandMenu />
         <Toaster richColors />

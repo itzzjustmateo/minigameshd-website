@@ -16,7 +16,7 @@ export default function FAQPage() {
         <header className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">FAQ</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Häufig gestellte Fragen rund um MiniGamesHD
+            Frequently asked questions about MiniGamesHD
           </p>
         </header>
 
@@ -25,33 +25,33 @@ export default function FAQPage() {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger>
-                  Wie kann ich auf dem Server spielen?
+                  How can I play on the server?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Nutze die Server-IP <strong>minigameshd.de</strong> für{" "}
-                  <strong>Java</strong> oder{" "}
-                  <strong>minigameshd.minecraft.to</strong> für{" "}
-                  <strong>beides</strong>.
+                  Use the server IP <strong>minigameshd.de</strong> for{" "}
+                  <strong>Java</strong> or{" "}
+                  <strong>minigameshd.minecraft.to</strong> for{" "}
+                  <strong>both</strong>.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger>Gibt es ein Mindestalter?</AccordionTrigger>
+                <AccordionTrigger>Is there a minimum age?</AccordionTrigger>
                 <AccordionContent>
-                  Wir empfehlen ein Mindestalter von 12 Jahren.
+                  We recommend a minimum age of 12 years.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger>Wie kann ich mich bewerben?</AccordionTrigger>
+                <AccordionTrigger>How can I apply?</AccordionTrigger>
                 <AccordionContent>
-                  Bewerbungen laufen aktuell über unseren Discord per Ticket
-                  oder über unsere{" "}
+                  Applications are currently processed via our Discord via ticket
+                  or through our{" "}
                   <Button
                     variant="link"
                     className="p-0 inline-block text-blue-400"
                   >
-                    <Link href={"/apply"}>Bewerbungsseite</Link>
+                    <Link href={"/apply"}>application page</Link>
                   </Button>
                   .
                 </AccordionContent>
@@ -59,10 +59,10 @@ export default function FAQPage() {
 
               <AccordionItem value="item-4">
                 <AccordionTrigger>
-                  Was passiert bei Regelverstößen?
+                  What happens when rules are broken?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Je nach Schwere gibt es Verwarnungen, Mutes oder Bans.
+                  Depending on severity, there are warnings, mutes, or bans.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
